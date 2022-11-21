@@ -26,15 +26,15 @@ func (c *Connection) OnTcpRread(buf []byte) ([]byte, gnet.Action) {
 	return nil, gnet.None
 }
 
-func (m *Manager) NewOrGet() tcp.IContext {
-	conn := &Connection{
+func (m *Manager) NewOrGet(conn interface{}) tcp.IContext {
+	c := &Connection{
 		IContext: tcp.NewContext(),
 		pool:     goPool.Default(),
 	}
 
-	m.conn = conn
+	m.conn = c
 
-	return conn
+	return c
 }
 
 func (m *Manager) OnTcpClose(ctx tcp.IContext) error {
