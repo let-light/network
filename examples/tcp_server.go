@@ -7,37 +7,37 @@ import (
 )
 
 type Manager struct {
-	conn *Connection
+	session *Session
 }
 
-type Connection struct {
-	tcp.IContext
+type Session struct {
+	tcp.IConnection
 	pool *goPool.Pool
 }
 
-func (c *Connection) OnTcpRread(buf []byte) ([]byte, gnet.Action) {
-	c.pool.Submit(func() {
+func (s *Session) OnTcpRread(buf []byte) ([]byte, gnet.Action) {
+	s.pool.Submit(func() {
 		// do something
 
 		// write
-		c.Write(buf)
+		s.Write(buf)
 	})
 
 	return nil, gnet.None
 }
 
-func (m *Manager) NewOrGet(conn interface{}) tcp.IContext {
-	c := &Connection{
-		IContext: tcp.NewContext(),
-		pool:     goPool.Default(),
+func (m *Manager) OnAccept(conn tcp.IConnection) tcp.IConnection {
+	s := &Session{
+		IConnection: conn,
+		pool:        goPool.Default(),
 	}
 
-	m.conn = c
+	m.session = s
 
-	return c
+	return s
 }
 
-func (m *Manager) OnTcpClose(ctx tcp.IContext) error {
+func (m *Manager) OnTcpClose(conn tcp.IConnection) error {
 	return nil
 }
 
@@ -50,7 +50,7 @@ func (m *Manager) OnTcpClose(ctx tcp.IContext) error {
 // }
 
 func main() {
-	_, err := tcp.NewServer(":8081", &Manager{}, gnet.WithMulticore(true))
+	_, err := tcp.NewServer(":8082", &Manager{}, gnet.WithMulticore(true))
 	if err != nil {
 		panic(err)
 	}
